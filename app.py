@@ -9,22 +9,16 @@ from flask import Flask
 
 app = Flask(__name__)
 
-
-# the default name of deployment
-# this will override the name specified in deployment.yaml
-DEPLOYMENT_NAME = environ.get(
-    'DEPLOYMENT_NAME', '<SPECIFY YOUR DEPLIOYMENT NAME HERE>')
-# assign the gcp id here
-PROJECT_ID = environ.get('PROJECT_ID', '<SPECIFY_YOUR_PROJECT_ID_HERE>')
-NEW_IMAGE_LOCATION = environ.get(
-    'NEW_IMAGE_LOCATION', '<NEW_IMAGE_LOCATION_HERE>')
+HELLOWORLD_IMAGE_LOCATION = environ.get(
+    'HELLOWORLD_IMAGE_LOCATION', '<HELLOWORLD_IMAGE_LOCATION _HERE>')
+UPDATED_IMAGE_LOCATION = environ.get(
+    'UPDATED_IMAGE_LOCATION', '<UPDATED_IMAGE_LOCATION_HERE>')
 
 
 def create_deployment_object():
     with open(path.join(path.dirname(__file__), "helloworld-deployment.yaml")) as f:
         deployment = yaml.safe_load(f)
-        # assign deployment name to access in rest of the functions
-        deployment['metadata']['name'] = DEPLOYMENT_NAME
+        deployment['spec']['template']['spec']['containers'][0]['image'] = HELLOWORLD_IMAGE_LOCATION
     return deployment
 
 
@@ -48,11 +42,11 @@ def create_deployment(api, deployment):
 
 def update_deployment(api, deployment):
     # Update container image
-    deployment['spec']['template']['spec']['containers'][0]['image'] = NEW_IMAGE_LOCATION
+    deployment['spec']['template']['spec']['containers'][0]['image'] = UPDATED_IMAGE_LOCATION
 
     # patch the deployment
     resp = api.patch_namespaced_deployment(
-        name=DEPLOYMENT_NAME, namespace="default", body=deployment
+        namespace="default", body=deployment
     )
 
     print("\n[INFO] deployment's container image updated.\n")
@@ -79,10 +73,11 @@ def restart_deployment(api, deployment):
 
     # patch the deployment
     resp = api.patch_namespaced_deployment(
-        name=DEPLOYMENT_NAME, namespace="default", body=deployment
+        namespace="default", body=deployment
     )
 
-    print("\n[INFO] deployment `{}` restarted.\n".format(DEPLOYMENT_NAME))
+    print("\n[INFO] deployment `{}` restarted.\n".format(
+        deployment['metadata']['name']))
     print("%s\t\t\t%s\t%s" % ("NAME", "REVISION", "RESTARTED-AT"))
     print(
         "%s\t%s\t\t%s\n"
@@ -94,16 +89,17 @@ def restart_deployment(api, deployment):
     )
 
 
-def delete_deployment(api):
+def delete_deployment(api, deployment):
     # Delete deployment
     resp = api.delete_namespaced_deployment(
-        name=DEPLOYMENT_NAME,
+        name=deployment['metadata']['name'],
         namespace="default",
         body=client.V1DeleteOptions(
             propagation_policy="Foreground", grace_period_seconds=5
         ),
     )
-    print("\n[INFO] deployment `{}` deleted.".format(DEPLOYMENT_NAME))
+    print("\n[INFO] deployment `{}` deleted.".format(
+        deployment['metadata']['name']))
 
 
 @app.route('/')
@@ -145,10 +141,8 @@ def delete():
 config.load_incluster_config()
 # print(config)
 
-# This code will only run in local machine
 
-
-def main():
+def main():  # This code will only run in local machine
     config.load_kube_config()
     # print(config.list_kube_config_contexts())
     app.run(debug=True, host='0.0.0.0', port=int(environ.get('PORT', 8080)))
