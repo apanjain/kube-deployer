@@ -14,7 +14,7 @@
 - Build an image for this container and push it to the registry, e.g.
 
 ```bash
-glcoud builds submit --tag gcr.io/$GCLOUD_PROJECT/gke-kube-crud:latest
+glcoud builds submit --tag gcr.io/$GCLOUD_PROJECT/gke-kube-crud:latest .
 ```
 
 - Setup these values inside the `kube-crud-deployment.yaml` file
