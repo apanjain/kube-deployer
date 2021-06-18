@@ -1,0 +1,9 @@
+Dockerfile
+README.md
+env
+*.pyc
+*.pyo
+*.pyd
+__pycache__
+kube-crud-deployment.yaml
+helloworld-service.yaml

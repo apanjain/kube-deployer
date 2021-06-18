@@ -1,0 +1,59 @@
+# This file configures the hello-world app which serves public web traffic.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gke-kube-crud
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kube-crud
+  template:
+    metadata:
+      labels:
+        app: kube-crud
+    spec:
+      containers:
+        - name: kube-crud-app
+          # Replace $GCLOUD_PROJECT with your project ID
+          image: gcr.io/$GCLOUD_PROJECT/gke-kube-crud:latest
+          # This app listens on port 8080 for web traffic by default.
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kube-crud
+spec:
+  type: LoadBalancer
+  selector:
+    app: kube-crud
+  ports:
+    - port: 80
+      targetPort: 8080
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: deployment-manager
+rules:
+  - apiGroups: ["", "extensions", "apps"]
+    resources: ["deployments", "replicasets", "pods"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: deployment-manager
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: deployment-manager
+  apiGroup: rbac.authorization.k8s.io
