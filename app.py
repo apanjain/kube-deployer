@@ -134,7 +134,8 @@ def update():
 @app.route('/delete')
 def delete():
     apps_v1 = client.AppsV1Api()
-    delete_deployment(apps_v1)
+    deployment = create_deployment_object()
+    delete_deployment(apps_v1,deployment)
     return 'deleted'
 
 
