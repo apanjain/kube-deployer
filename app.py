@@ -1,22 +1,24 @@
+import os
+import json
 import datetime
 import yaml
 import pytz
-from os import path, environ
 from kubernetes import client, config
+from kafka import KafkaConsumer
 
-from flask import Flask
 
-
-app = Flask(__name__)
-
-HELLOWORLD_IMAGE_LOCATION = environ.get(
-    'HELLOWORLD_IMAGE_LOCATION', '<HELLOWORLD_IMAGE_LOCATION _HERE>')
-UPDATED_IMAGE_LOCATION = environ.get(
-    'UPDATED_IMAGE_LOCATION', '<UPDATED_IMAGE_LOCATION_HERE>')
+HELLOWORLD_IMAGE_LOCATION = os.environ.get(
+    'HELLOWORLD_IMAGE_LOCATION', 'nginx')
+UPDATED_IMAGE_LOCATION = os.environ.get('UPDATED_IMAGE_LOCATION', 'nginx')
+DEBUG = not (os.environ.get('MODE', 'DEV') == 'PROD')
+KAFKA_BROKER_IP = os.environ.get('KAFKA_BROKER_IP', '0.0.0.0')
+KAFKA_BROKER_PORT = os.environ.get('KAFKA_BROKER_PORT', 9092)
+KAFKA_TOPIC = os.environ.get('KAFKA_TOPIC', 'test-topic')
+KAFKA_GROUP_ID = os.environ.get('KAFKA_GROUP_ID', 'test-group')
 
 
 def create_deployment_object():
-    with open(path.join(path.dirname(__file__), "helloworld-deployment.yaml")) as f:
+    with open(os.path.join(os.path.dirname(__file__), "helloworld-deployment.yaml")) as f:
         deployment = yaml.safe_load(f)
         deployment['spec']['template']['spec']['containers'][0]['image'] = HELLOWORLD_IMAGE_LOCATION
     return deployment
@@ -46,6 +48,7 @@ def update_deployment(api, deployment):
 
     # patch the deployment
     resp = api.patch_namespaced_deployment(
+        name=deployment['metadata']['name'],
         namespace="default", body=deployment
     )
 
@@ -73,6 +76,7 @@ def restart_deployment(api, deployment):
 
     # patch the deployment
     resp = api.patch_namespaced_deployment(
+        name=deployment['metadata']['name'],
         namespace="default", body=deployment
     )
 
@@ -102,12 +106,6 @@ def delete_deployment(api, deployment):
         deployment['metadata']['name']))
 
 
-@app.route('/')
-def hello():
-    return 'API Initialized \n visit /create /update /delete /restart'
-
-
-@app.route('/create')
 def create():
     apps_v1 = client.AppsV1Api()
     deployment = create_deployment_object()
@@ -115,7 +113,6 @@ def create():
     return 'Created'
 
 
-@app.route('/restart')
 def restart():
     apps_v1 = client.AppsV1Api()
     deployment = create_deployment_object()
@@ -123,7 +120,6 @@ def restart():
     return 'restarted'
 
 
-@app.route('/update')
 def update():
     apps_v1 = client.AppsV1Api()
     deployment = create_deployment_object()
@@ -131,22 +127,49 @@ def update():
     return 'updated'
 
 
-@app.route('/delete')
 def delete():
     apps_v1 = client.AppsV1Api()
     deployment = create_deployment_object()
-    delete_deployment(apps_v1,deployment)
+    delete_deployment(apps_v1, deployment)
     return 'deleted'
 
 
-config.load_incluster_config()
-# print(config)
+def not_found():
+    print("Please provide a valid input\n")
 
 
-def main():  # This code will only run in local machine
-    config.load_kube_config()
-    # print(config.list_kube_config_contexts())
-    app.run(debug=True, host='0.0.0.0', port=int(environ.get('PORT', 8080)))
+def main():
+    try:
+        # print(DEBUG)
+        if DEBUG:
+            config.load_kube_config()
+        else:
+            config.load_incluster_config()
+
+        switcher = {
+            'create': create,
+            'restart': restart,
+            'update': update,
+            'delete': delete
+        }
+
+        consumer = KafkaConsumer(
+            KAFKA_TOPIC,
+            bootstrap_servers="{}:{}".format(
+                KAFKA_BROKER_IP, KAFKA_BROKER_PORT),
+            auto_offset_reset="earliest",
+            group_id=KAFKA_GROUP_ID)
+
+        print("Starting the consumer...")
+        for msg in consumer:
+            try:
+                command = json.loads(msg.value).get(
+                    'command', 'invalid').lower()
+                switcher.get(command, not_found)()
+            except Exception as e:
+                print(e)
+    except Exception as e:
+        print(e)
 
 
 if __name__ == "__main__":

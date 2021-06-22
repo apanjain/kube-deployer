@@ -6,4 +6,4 @@ env
 *.pyd
 __pycache__
 kube-crud-deployment.yaml
-helloworld-service.yaml
+.vscode

@@ -26,6 +26,14 @@ spec:
               value: HELLOWORLD_IMAGE_LOCATION_HERE # e.g. gcr.io/$GCLOUD_PROJECT/helloworld-gke:latest
             - name: UPDATED_IMAGE_LOCATION
               value: UPDATED_IMAGE_LOCATION_HERE # e.g. gcr.io/$GCLOUD_PROJECT/helloworld-gke:v1
+            - name: KAFKA_BROKER_IP
+              value: KAFKA_BROKER_IP
+            - name: KAFKA_BROKER_PORT
+              value: KAFKA_BROKER_PORT
+            - name: KAFKA_TOPIC
+              value: KAFKA_TOPIC
+            - name: KAFKA_GROUP_ID
+              value: KAFKA_GROUP_ID
 ---
 apiVersion: v1
 kind: Service
