@@ -35,18 +35,6 @@ spec:
             - name: KAFKA_GROUP_ID
               value: KAFKA_GROUP_ID
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  name: kube-crud
-spec:
-  type: LoadBalancer
-  selector:
-    app: kube-crud
-  ports:
-    - port: 80
-      targetPort: 8080
----
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
