@@ -14,7 +14,7 @@
 - Build an image for this container and push it to the registry, e.g.
 
 ```bash
-glcoud builds submit --tag gcr.io/$GCLOUD_PROJECT/gke-kube-crud:latest .
+gcloud builds submit --tag gcr.io/$GCLOUD_PROJECT/gke-kube-crud:latest .
 ```
 
 - Setup these values inside the `kube-crud-deployment.yaml` file
@@ -22,6 +22,10 @@ glcoud builds submit --tag gcr.io/$GCLOUD_PROJECT/gke-kube-crud:latest .
   - `LOCATION_TO_KUBECRUD_IMAGE`
   - `HELLOWORLD_IMAGE_LOCATION`
   - `UPDATED_IMAGE_LOCATION`
+  - `KAFKA_BROKER_IP`
+  - `KAFKA_BROKER_PORT`
+  - `KAFKA_TOPIC`
+  - `KAFKA_GROUP_ID`
 
 - Deploy the container on the cluster
 
@@ -35,7 +39,7 @@ kubectl apply -f kube-crud-deployment.yaml
 kubectl apply -f helloworld-service.yaml
 ```
 
-- Run the following command to get the external IPs for both the services
+- Run the following command to get the external IPs for the `hello` service
 
 ```bash
 kubectl get services
@@ -43,5 +47,14 @@ kubectl get services
 
 ## USAGE
 
-- Just hit the external IP specified by kube-crud service, to check whether the flask app is running
-- Go to `/create` `/restart` `/update` `/delete` to perform respective operations on the helloworld container
+- Add messages to your kafka topic in the following format
+
+```
+{'command' : '<CMD>'}
+```
+
+- Where `<CMD>` can be
+  - `create`
+  - `restart`
+  - `update`
+  - `delete`
