@@ -34,6 +34,8 @@ spec:
               value: KAFKA_TOPIC
             - name: KAFKA_GROUP_ID
               value: KAFKA_GROUP_ID
+            - name: ML_IMAGE_LOCATION
+              value: ML_IMAGE_LOCATION
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
