@@ -1,0 +1,20 @@
+# This file configures the hello-world app which serves public web traffic.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ml-depl
+spec:
+  template:
+    spec:
+      containers:
+        - name: ml-model-trainer
+          image: ML_IMAGE_LOCATION
+          volumeMounts:
+            - mountPath: "/mnt/c"
+              name: test-volume
+      restartPolicy: Never
+      volumes:
+        - name: test-volume
+          # This GCE PD must already exist.
+          persistentVolumeClaim:
+            claimName: myclaim
