@@ -2,6 +2,7 @@
 Creates, updates, and deletes a job object.
 """
 
+import logging
 import os
 from time import sleep
 
@@ -23,7 +24,7 @@ def create_job(api_instance, job):
     api_response = api_instance.create_namespaced_job(
         body=job,
         namespace="default")
-    print("Job created. status='%s'" % str(api_response.status))
+    logging.info("Job created. status='{}'".format(str(api_response.status)))
     get_job_status(api_instance, job)
 
 
@@ -38,7 +39,7 @@ def get_job_status(api_instance, job):
         if api_response.status.succeeded:
             delete()
         sleep(10)
-        print("Job status='%s'" % str(api_response.status))
+        logging.info("Job status='{}'".format(str(api_response.status)))
 
 
 def delete_job(api_instance, job):
@@ -48,7 +49,7 @@ def delete_job(api_instance, job):
         body=client.V1DeleteOptions(
             propagation_policy='Foreground',
             grace_period_seconds=5))
-    print("Job deleted. status='%s'" % str(api_response.status))
+    logging.info("Job deleted. status='{}'".format(str(api_response.status)))
 
 
 def create():
