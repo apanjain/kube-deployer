@@ -3,6 +3,9 @@ import json
 from kubernetes import client, config
 from kafka import KafkaConsumer
 import job_crud, deployment_crud
+import logging
+
+logging.basicConfig(filename='/mnt/c/pykube-debug.log', level=logging.INFO)
 
 DEBUG = not (os.environ.get('MODE', 'DEV') == 'PROD')
 KAFKA_BROKER_IP = os.environ.get('KAFKA_BROKER_IP', '0.0.0.0')
@@ -12,7 +15,7 @@ KAFKA_GROUP_ID = os.environ.get('KAFKA_GROUP_ID', 'test-group')
 
 
 def not_found():
-    print("Please provide a valid input\n")
+    logging.warning("Please provide a valid input\n")
 
 
 def main():
@@ -34,16 +37,16 @@ def main():
             auto_offset_reset="earliest",
             group_id=KAFKA_GROUP_ID)
 
-        print("Starting the consumer...")
+        logging.info("Starting the consumer...")
         for msg in consumer:
             try:
                 command = json.loads(msg.value).get(
                     'command', 'invalid').lower()
                 switcher.get(command, not_found)()
             except Exception as e:
-                print(e)
+                logging.error(str(e))
     except Exception as e:
-        print(e)
+        logging.error(str(e))
 
 
 if __name__ == "__main__":
