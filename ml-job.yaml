@@ -2,16 +2,47 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: ml-depl
+  name: ml-train-job
 spec:
   template:
     spec:
       containers:
         - name: ml-model-trainer
-          image: ML_IMAGE_LOCATION
+          image: ML_TRAINER_IMAGE
           volumeMounts:
             - mountPath: "/mnt/c"
               name: test-volume
+          env:
+            - name: DB_CONN_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: ml-configmap
+                  key: DB_CONN_URL
+            - name: DB_CONN_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: ml-configmap
+                  key: DB_CONN_PORT
+            - name: DB_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  name: ml-configmap
+                  key: DB_DATABASE
+            - name: DB_COLLECTION
+              valueFrom:
+                configMapKeyRef:
+                  name: ml-configmap
+                  key: DB_COLLECTION
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: ml-auth-secret
+                  key: username
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: ml-auth-secret
+                  key: password
       restartPolicy: Never
       volumes:
         - name: test-volume
