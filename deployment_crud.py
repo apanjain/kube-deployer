@@ -2,6 +2,7 @@ import os
 import yaml
 import datetime
 import pytz
+import logging
 from kubernetes import client
 
 
@@ -22,15 +23,15 @@ def create_deployment(api, deployment):
     resp = api.create_namespaced_deployment(
         body=deployment, namespace="default"
     )
-    print("\n[INFO] deployment `flask-deployment` created.\n")
-    print("%s\t%s\t\t\t%s\t%s" % ("NAMESPACE", "NAME", "REVISION", "IMAGE"))
-    print(
-        "%s\t\t%s\t%s\t\t%s\n"
-        % (
-            resp.metadata.namespace,
-            resp.metadata.name,
-            resp.metadata.generation,
-            resp.spec.template.spec.containers[0].image,
+    logging.info("\n deployment `flask-deployment` created.\n")
+    logging.info("{}}\t{}}\t\t\t{}}\t{}}".format(
+        "NAMESPACE", "NAME", "REVISION", "IMAGE"))
+    logging.info(
+        "{}}\t\t{}}\t{}}\t\t{}}\n".format(
+            str(resp.metadata.namespace),
+            str(resp.metadata.name),
+            str(resp.metadata.generation),
+            str(resp.spec.template.spec.containers[0].image),
         )
     )
 
@@ -44,15 +45,15 @@ def update_deployment(api, deployment):
         name=deployment['metadata']['name'],
         namespace="default", body=deployment
     )
-    print("\n[INFO] deployment's container image updated.\n")
-    print("%s\t%s\t\t\t%s\t%s" % ("NAMESPACE", "NAME", "REVISION", "IMAGE"))
-    print(
-        "%s\t\t%s\t%s\t\t%s\n"
-        % (
-            resp.metadata.namespace,
-            resp.metadata.name,
-            resp.metadata.generation,
-            resp.spec.template.spec.containers[0].image,
+    logging.info("\n deployment's container image updated.\n")
+    logging.info("{}}\t{}}\t\t\t{}}\t{}}".format(
+        "NAMESPACE", "NAME", "REVISION", "IMAGE"))
+    logging.info(
+        "{}}\t\t{}}\t{}}\t\t{}}\n".format(
+            str(resp.metadata.namespace),
+            str(resp.metadata.name),
+            str(resp.metadata.generation),
+            str(resp.spec.template.spec.containers[0].image),
         )
     )
 
@@ -72,12 +73,12 @@ def restart_deployment(api, deployment):
         namespace="default", body=deployment
     )
 
-    print("\n[INFO] deployment `{}` restarted.\n".format(
+    logging.info("\n deployment `{}` restarted.\n".format(
         deployment['metadata']['name']))
-    print("%s\t\t\t%s\t%s" % ("NAME", "REVISION", "RESTARTED-AT"))
-    print(
-        "%s\t%s\t\t%s\n"
-        % (
+    logging.info("{}}\t\t\t{}}\t{}}".format(
+        "NAME", "REVISION", "RESTARTED-AT"))
+    logging.info(
+        "{}}\t{}}\t\t{}}\n".format(
             resp.metadata.name,
             resp.metadata.generation,
             resp.spec.template.metadata.annotations,
@@ -94,7 +95,7 @@ def delete_deployment(api, deployment):
             propagation_policy="Foreground", grace_period_seconds=5
         ),
     )
-    print("\n[INFO] deployment `{}` deleted.".format(
+    logging.info("\n[INFO] deployment `{}` deleted.".format(
         deployment['metadata']['name']))
 
 
